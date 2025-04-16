@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #37397e;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .profile-container {
+      background: #becee1;
+      padding: 30px 30px 20px;
+      width: 350px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .profile-container:hover {
+      transform: scale(1.01);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .back-button {
+      position: absolute;
+      left: 0;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: #3498db;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .profile-pic {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 15px;
+    }
+
+    .profile-pic img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #3498db;
+    }
+
+    .profile-pic input {
+      display: none;
+    }
+
+    .upload-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #3498db;
+      color: #fff;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .user-info {
+      margin-top: 10px;
+    }
+
+    .user-info h2 {
+      margin: 10px 0 5px;
+    }
+
+    .user-info p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    .logout-btn {
+      margin-top: 25px;
+      padding: 10px 25px;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: #c0392b;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 400px) {
+      .profile-container {
+        width: 90%;
+        padding: 25px 20px;
+      }
+
+      .header-title {
+        font-size: 16px;
+      }
+
+      .back-button {
+        font-size: 16px;
+        padding: 5px 8px;
+      }
+
+      .profile-pic {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 10px;
+      }
+
+      .upload-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 16px;
+      }
+
+      .logout-btn {
+        padding: 8px 20px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-container">
+    <div class="header">
+      <button class="back-button" onclick="goBack()">← Back</button>
+      <div class="header-title">Profile</div>
+    </div>
+
+    <div class="profile-pic">
+      <img src="https://via.placeholder.com/120" alt="Profile" id="profileImage" />
+      <label for="uploadInput" class="upload-btn">+</label>
+      <input type="file" id="uploadInput" accept="image/*" />
+    </div>
+
+    <div class="user-info">
+      <h2 id="userName">John smith</h2>
+      <p id="userEmail">john.smith@example.com</p>
+      <p>Location: Lagos, Nigeria</p>
+      <p>Joined: Jan 2025</p>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const uploadInput = document.getElementById("uploadInput");
+    const profileImage = document.getElementById("profileImage");
+
+    uploadInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          profileImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function logout() {
+  // Optional: clear session or local storage here
+  alert("You have been logged out!");
+  window.location.href = "login.html"; // Replace with your actual login page URL
+}
+
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+</html>

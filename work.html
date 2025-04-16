@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workers Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.2);
+            --border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            --text-light: rgba(255, 255, 255, 0.9);
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Manrope", sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating Particles Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+            }
+        }
+
+        /* Glass Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            height: 100vh;
+            padding: 25px;
+            border-right: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                transparent,
+                transparent,
+                transparent,
+                #667eea
+            );
+            transform: rotate(0deg);
+            animation: rotateLight 8s linear infinite;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            padding-left: 10px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .menu {
+            margin-top: 20px;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            animation: fadeInLeft 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .menu li:nth-child(1) { animation-delay: 0.2s; }
+        .menu li:nth-child(2) { animation-delay: 0.3s; }
+        .menu li:nth-child(3) { animation-delay: 0.4s; }
+        .menu li:nth-child(4) { animation-delay: 0.5s; }
+        .menu li:nth-child(5) { animation-delay: 0.6s; }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .menu li span {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .menu li:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .menu .active {
+            background: linear-gradient(to right, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            animation: fadeInDown 0.5s ease-out;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .user-info h4 {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .profile span {
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .profile span:hover {
+            transform: scale(1.1);
+            color: var(--primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Workers Container */
+        .workers-container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .workers-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .workers-header button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .workers-header .active-tab {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .workers-header button:not(.active-tab) {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .workers-header button:not(.active-tab):hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #addWorkerBtn {
+            background: var(--success);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #addWorkerBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Search and Filter */
+        .search-filter {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-dropdown select {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            appearance: none;
+            padding-right: 35px;
+            cursor: pointer;
+        }
+
+        .filter-dropdown::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Workers List */
+        .workers-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .worker-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .worker-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .worker-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        .worker-info {
+            flex: 1;
+        }
+
+        .worker-info h4 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .worker-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .worker-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+
+        .worker-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .worker-actions button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .worker-actions button:hover {
+            transform: scale(1.1);
+        }
+
+        .worker-actions .edit-btn {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--warning);
+        }
+
+        .worker-actions .delete-btn {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .pagination button {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .pagination button.active {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+
+        /* Add Worker Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            position: relative;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-footer button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 15px 10px;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+                text-align: center;
+                padding-left: 0;
+            }
+            
+            .menu li span {
+                margin-right: 0;
+                font-size: 1.5rem;
+            }
+            
+            .menu li a {
+                justify-content: center;
+                padding: 15px 5px;
+            }
+            
+            .menu li .menu-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+            
+            .menu {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .menu li {
+                min-width: 70px;
+                margin-bottom: 0;
+                margin-right: 10px;
+            }
+            
+            .main-content {
+                padding: 15px;
+                height: auto;
+            }
+            
+            .workers-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .profile {
+                flex-direction: column;
+            }
+            
+            .workers-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-filter {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>Bob 🐛 cat</h2>
+        </div>
+        <ul class="menu">
+            <li><a href="dash.html"><span>🏠</span><span class="menu-text">Dashboard</span></a></li>
+            <li><a href="work.html"><span>👥</span><span class="menu-text">Workers</span></a></li>
+            <li><a href="att.html"><span>📅</span><span class="menu-text">Attendance</span></a></li>
+            <li><a href="pay.html"><span>💰</span><span class="menu-text">Payments</span></a></li>
+            <li><a href="reports.html"><span>📊</span><span class="menu-text">Reports</span></a></li>
+            <li><a href="Profile.html"><span>🔃</span><span class="menu-text">Profile</span></a></li>
+        </ul>
+    </div>
+        
+
+   <!-- Main Content -->
+    <div class="main-content">
+        <header>
+            <h1>Workers Management</h1>
+            <div class="profile">
+                <span>🔔<span class="notification-badge">3</span></span>
+                <img src="images/paul.jpg" alt="User">
+                <div class="user-info">
+                    <h4>John Smith</h4>
+                    <p>Administrator</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Workers Container -->
+        <div class="workers-container">
+            <div class="workers-header">
+                <button class="active-tab">All Workers</button>
+                <button id="addWorkerBtn">
+                    <i class="fas fa-plus"></i> Add New Worker
+                </button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-filter">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search workers...">
+                </div>
+                <div class="filter-dropdown">
+                    <select>
+                        <option>All Departments</option>
+                        <option>Development</option>
+                        <option>Design</option>
+                        <option>Marketing</option>
+                        <option>HR</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Workers List -->
+            <div class="workers-list">
+                <div class="worker-card animate__animated">
+                    <img src="images/4piv.jpg" alt="Sarah Johnson">
+                    <div class="worker-info">
+                        <h4>Sarah Johnson</h4>
+                        <p>sarahj@example.com</p>
+                        <span class="worker-status status-active">Active</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="worker-card animate__animated">
+                    <img src="images/3piv.jpg" alt="Michael Chen">
+                    <div class="worker-info">
+                        <h4>Michael Chen</h4>
+                        <p>michael.c@example.com</p>
+                        <span class="worker-status status-active">Active</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="worker-card animate__animated">
+                    <img src="images/2piv.jpg" alt="David Wilson">
+                    <div class="worker-info">
+                        <h4>David Wilson</h4>
+                        <p>david.w@example.com</p>
+                        <span class="worker-status status-inactive">Inactive</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="worker-card animate__animated">
+                    <img src="images/jjjc.jpeg" alt="Emma Davis">
+                    <div class="worker-info">
+                        <h4>Emma Davis</h4>
+                        <p>emma.d@example.com</p>
+                        <span class="worker-status status-active">Active</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="worker-card animate__animated">
+                    <img src="images/laba pic.jpeg" alt="James Brown">
+                    <div class="worker-info">
+                        <h4>James Brown</h4>
+                        <p>james.b@example.com</p>
+                        <span class="worker-status status-active">Active</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+
+                <div class="worker-card animate__animated">
+                    <img src="images/paul.jpg" alt="Olivia Wilson">
+                    <div class="worker-info">
+                        <h4>Olivia Wilson</h4>
+                        <p>olivia.w@example.com</p>
+                        <span class="worker-status status-inactive">Inactive</span>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="prev"><i class="fas fa-chevron-left"></i></button>
+                <button class="page active">1</button>
+                <button class="page">2</button>
+                <button class="page">3</button>
+                <button class="next"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Worker Modal -->
+    <div class="modal-overlay" id="addWorkerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add New Worker</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="workerForm">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Position</label>
+                    <input type="text" id="position" required>
+                </div>
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <select id="department" required>
+                        <option value="">Select Department</option>
+                        <option value="development">Development</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="hr">Human Resources</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hireDate">Hire Date</label>
+                    <input type="date" id="hireDate" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="submit-btn">Add Worker</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles background
+        function createParticles() {
+            const particlesContainer = document.getElementById("particles");
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement("div");
+                particle.classList.add("particle");
+                
+                // Random properties
+                const size = Math.random() * 5 + 2;
+                const posX = Math.random() * 100;
+                const duration = Math.random() * 20 + 10;
+                const delay = Math.random() * 5;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}%`;
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Modal functionality
+        function setupModal() {
+            const modal = document.getElementById("addWorkerModal");
+            const addBtn = document.getElementById("addWorkerBtn");
+            const closeBtn = document.querySelector(".close-modal");
+            const cancelBtn = document.querySelector(".cancel-btn");
+            
+            // Show modal
+            addBtn.addEventListener("click", () => {
+                modal.classList.add("active");
+            });
+            
+            // Hide modal
+            function hideModal() {
+                modal.classList.remove("active");
+            }
+            
+            closeBtn.addEventListener("click", hideModal);
+            cancelBtn.addEventListener("click", hideModal);
+            
+            // Hide modal when clicking outside
+            modal.addEventListener("click", (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+            
+            // Form submission
+            document.getElementById("workerForm").addEventListener("submit", (e) => {
+                e.preventDefault();
+                // Here you would typically send data to server
+                alert("Worker added successfully!");
+                hideModal();
+                // Reset form
+                e.target.reset();
+            });
+        }
+
+        // Add animations to worker cards
+        function addCardAnimations() {
+            const cards = document.querySelectorAll('.worker-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate__fadeInUp');
+                
+                // Add hover effect
+                card.addEventListener('mouseenter', () => {
+                    card.classList.add('animate__pulse');
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('animate__pulse');
+                });
+            });
+        }
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            setupModal();
+            addCardAnimations();
+            
+            // Add animation to notification bell
+            setInterval(() => {
+                const bell = document.querySelector('.profile span');
+                bell.classList.toggle('animate__swing');
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
